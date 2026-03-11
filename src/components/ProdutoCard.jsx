@@ -1,11 +1,9 @@
 import styled from "styled-components";
+import estrela from "../assets/estrela.png";
 
 const Card = styled.div`
-  border: 1px solid #ff6b6b;
+  border: 1px solid #E66767;
   background: #fff;
-`;
-
-const ImgContainer = styled.div`
   position: relative;
 `;
 
@@ -17,75 +15,90 @@ const Img = styled.img`
 
 const Tags = styled.div`
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 16px;
+  right: 16px;
   display: flex;
   gap: 8px;
 `;
 
 const Tag = styled.span`
-  background: #ff6b6b;
-  color: #fff;
+  background: #E66767;
+  color: #FFEBD9;
   font-size: 12px;
-  padding: 4px 6px;
+  font-weight: 700;
+  padding: 6px 4px;
+  display: inline-block;
 `;
 
 const Conteudo = styled.div`
   padding: 8px;
+  border: 1px solid #E66767;
+  border-top: none;
 `;
 
 const TituloLinha = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 16px;
 `;
 
 const Nome = styled.h3`
   font-size: 18px;
-  margin: 8px 0;
-  color: #ff6b6b;
+  font-weight: 700;
+  color: #E66767;
 `;
 
-const Nota = styled.span`
+const NotaContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #E66767;
+  font-weight: 700;
   font-size: 18px;
-  color: #ff6b6b;
+
+  img {
+    width: 21px;
+    height: 21px;
+  }
 `;
 
 const Descricao = styled.p`
   font-size: 14px;
-  color: #ff6b6b;
-  margin-bottom: 12px;
+  line-height: 22px;
+  color: #E66767;
+  margin-bottom: 16px;
 `;
 
 const Botao = styled.button`
-  background: #ff6b6b;
-  color: #fff;
+  background: #E66767;
+  color: #FFEBD9;
   border: none;
-  padding: 4px 8px;
+  padding: 4px 6px;
   font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
 `;
 
-export default function ProdutoCard({ produto, onClick }) {
+export default function ProdutoCard({ restaurante, onClick }) {
   return (
     <Card>
-      <ImgContainer>
-        <Img src={produto.img} alt={produto.nome} />
-
-        <Tags>
-          {produto.tags.map((tag, index) => (
-            <Tag key={index}>{tag}</Tag>
-          ))}
-        </Tags>
-      </ImgContainer>
+      <Img src={restaurante.capa} alt={restaurante.titulo} />
+      <Tags>
+        {restaurante.destacado && <Tag>Destaque do dia</Tag>}
+        <Tag>{restaurante.tipo}</Tag>
+      </Tags>
 
       <Conteudo>
         <TituloLinha>
-          <Nome>{produto.nome}</Nome>
-          <Nota>{produto.nota} ⭐</Nota>
+          <Nome>{restaurante.titulo}</Nome>
+          <NotaContainer>
+            {restaurante.avaliacao}
+            <img src={estrela} alt="estrela" />
+          </NotaContainer>
         </TituloLinha>
 
-        <Descricao>{produto.descricao}</Descricao>
+        <Descricao>{restaurante.descricao}</Descricao>
 
         <Botao onClick={onClick}>Saiba mais</Botao>
       </Conteudo>
