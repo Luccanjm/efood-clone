@@ -1,6 +1,7 @@
 import styled from "styled-components";
-import { useContext, useState } from "react";
-import { CartContext } from "../context/CartContext";
+import { useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { remove, toggleCart, clear } from "../store/cartSlice";
 import lixeira from "../assets/lixeira.png";
 
 const Overlay = styled.div`
@@ -21,21 +22,10 @@ const SidebarContainer = styled.aside`
   flex-direction: column;
   color: #FFEBD9;
 
-  h3 {
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 16px;
-  }
-
-  p {
-    font-size: 14px;
-    line-height: 22px;
-    margin-bottom: 16px;
-    font-weight: 400;
-  }
+  h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+  p { font-size: 14px; line-height: 22px; margin-bottom: 16px; }
 `;
 
-// --- Estilos do Carrinho ---
 const ItemCarrinho = styled.div`
   background-color: #FFEBD9;
   padding: 8px;
@@ -44,66 +34,23 @@ const ItemCarrinho = styled.div`
   margin-bottom: 16px;
   color: #E66767;
 
-  img.foto-produto {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    margin-right: 8px;
-  }
-
-  div {
-    h3 {
-      font-size: 18px;
-      font-weight: 900;
-      margin-bottom: 16px;
-    }
-    p {
-      font-size: 14px;
-    }
-  }
+  img.foto-produto { width: 80px; height: 80px; object-fit: cover; margin-right: 8px; }
+  div h3 { font-size: 18px; font-weight: 900; margin-bottom: 8px; }
+  div p { font-size: 14px; font-weight: 400; }
 `;
 
 const IconeLixeira = styled.img`
-  width: 16px;
-  height: 16px;
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  cursor: pointer;
+  width: 16px; height: 16px; position: absolute; bottom: 8px; right: 8px; cursor: pointer;
 `;
 
 const ValorTotal = styled.div`
-  display: flex;
-  justify-content: space-between;
-  color: #FFEBD9;
-  font-weight: 700;
-  font-size: 14px;
-  margin-top: 24px;
-  margin-bottom: 16px;
+  display: flex; justify-content: space-between; color: #FFEBD9; font-weight: 700; font-size: 14px; margin-top: 24px; margin-bottom: 16px;
 `;
 
-// --- Estilos de Formulários ---
 const FormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 8px;
-
-  label {
-    font-size: 14px;
-    font-weight: 700;
-    margin-bottom: 8px;
-  }
-
-  input {
-    background-color: #FFEBD9;
-    border: none;
-    height: 32px;
-    padding: 0 8px;
-    font-weight: 700;
-    color: #4B4B4B;
-    outline: none;
-    width: 100%;
-  }
+  display: flex; flex-direction: column; margin-bottom: 8px;
+  label { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+  input { background-color: #FFEBD9; border: none; height: 32px; padding: 0 8px; font-weight: 700; color: #4B4B4B; width: 100%; }
 `;
 
 const Row = styled.div`
@@ -112,147 +59,83 @@ const Row = styled.div`
   column-gap: ${(props) => (props.payment ? "30px" : "34px")};
 `;
 
-const ButtonContainer = styled.div`
-  margin-top: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`;
-
 const BotaoPrincipal = styled.button`
-  width: 100%;
-  background-color: #FFEBD9;
-  color: #E66767;
-  border: none;
-  padding: 4px 0;
-  font-weight: 700;
-  font-size: 14px;
-  cursor: pointer;
+  width: 100%; background-color: #FFEBD9; color: #E66767; border: none; padding: 4px 0; font-weight: 700; font-size: 14px; cursor: pointer; margin-top: 8px;
 `;
 
 export default function CarrinhoSidebar() {
-  const { cart, removeFromCart, isCartOpen, setIsCartOpen, clearCart } = useContext(CartContext);
+  const dispatch = useDispatch();
+  const { items, isOpen } = useSelector((state) => state.cart);
   const [etapa, setEtapa] = useState("carrinho");
 
-  if (!isCartOpen) return null;
+  if (!isOpen) return null;
 
-  const total = cart.reduce((acc, item) => {
-    const valor = parseFloat(item.preco.replace("R$", "").replace(".", "").replace(",", "."));
+  const total = items.reduce((acc, item) => {
+    const valor = typeof item.preco === 'string' 
+      ? parseFloat(item.preco.replace("R$", "").replace(".", "").replace(",", "."))
+      : item.preco;
     return acc + valor;
   }, 0);
 
-  const formatarValor = (valor) => valor.toLocaleString("pt-br", { minimumFractionDigits: 2 });
+  const formatarValor = (v) => v.toLocaleString("pt-br", { minimumFractionDigits: 2, style: 'currency', currency: 'BRL' });
 
   const handleClose = () => {
-    setIsCartOpen(false);
+    dispatch(toggleCart());
     setEtapa("carrinho");
-  };
-
-  const finalizarPedido = () => {
-    // Aqui você integraria com a API futuramente
-    setEtapa("confirmacao");
-    if (clearCart) clearCart(); 
   };
 
   return (
     <Overlay onClick={handleClose}>
       <SidebarContainer onClick={(e) => e.stopPropagation()}>
-        
-        {/* ETAPA 1: CARRINHO */}
         {etapa === "carrinho" && (
           <>
-            {cart.map((item, index) => (
+            {items.map((item, index) => (
               <ItemCarrinho key={index}>
-                <img className="foto-produto" src={item.img} alt={item.nome} />
+                <img className="foto-produto" src={item.foto} alt={item.nome} />
                 <div>
                   <h3>{item.nome}</h3>
-                  <p>{item.preco}</p>
+                  <p>{typeof item.preco === 'number' ? formatarValor(item.preco) : item.preco}</p>
                 </div>
-                <IconeLixeira src={lixeira} onClick={() => removeFromCart(index)} />
+                <IconeLixeira src={lixeira} onClick={() => dispatch(remove(index))} />
               </ItemCarrinho>
             ))}
-            <ValorTotal>
-              <span>Valor total</span>
-              <span>R$ {formatarValor(total)}</span>
-            </ValorTotal>
-            <BotaoPrincipal onClick={() => setEtapa("endereco")}>
-              Continuar com a entrega
-            </BotaoPrincipal>
+            <ValorTotal><span>Valor total</span><span>{formatarValor(total)}</span></ValorTotal>
+            <BotaoPrincipal onClick={() => setEtapa("endereco")}>Continuar com a entrega</BotaoPrincipal>
           </>
         )}
 
-        {/* ETAPA 2: ENDEREÇO */}
         {etapa === "endereco" && (
           <>
             <h3>Entrega</h3>
-            <form>
-              <FormGroup><label>Quem irá receber</label><input type="text" /></FormGroup>
-              <FormGroup><label>Endereço</label><input type="text" /></FormGroup>
-              <FormGroup><label>Cidade</label><input type="text" /></FormGroup>
-              <Row>
-                <FormGroup><label>CEP</label><input type="text" /></FormGroup>
-                <FormGroup><label>Número</label><input type="text" /></FormGroup>
-              </Row>
-              <FormGroup><label>Complemento (opcional)</label><input type="text" /></FormGroup>
-              <ButtonContainer>
-                <BotaoPrincipal type="button" onClick={() => setEtapa("pagamento")}>
-                  Continuar com o pagamento
-                </BotaoPrincipal>
-                <BotaoPrincipal type="button" onClick={() => setEtapa("carrinho")}>
-                  Voltar para o carrinho
-                </BotaoPrincipal>
-              </ButtonContainer>
-            </form>
+            <FormGroup><label>Quem irá receber</label><input type="text" /></FormGroup>
+            <FormGroup><label>Endereço</label><input type="text" /></FormGroup>
+            <FormGroup><label>Cidade</label><input type="text" /></FormGroup>
+            <Row><FormGroup><label>CEP</label><input type="text" /></FormGroup><FormGroup><label>Número</label><input type="text" /></FormGroup></Row>
+            <FormGroup><label>Complemento (opcional)</label><input type="text" /></FormGroup>
+            <BotaoPrincipal onClick={() => setEtapa("pagamento")}>Continuar com o pagamento</BotaoPrincipal>
+            <BotaoPrincipal onClick={() => setEtapa("carrinho")}>Voltar para o carrinho</BotaoPrincipal>
           </>
         )}
 
-        {/* ETAPA 3: PAGAMENTO */}
         {etapa === "pagamento" && (
           <>
-            <h3>Pagamento - Valor a pagar R$ {formatarValor(total)}</h3>
-            <form>
-              <FormGroup><label>Nome no cartão</label><input type="text" /></FormGroup>
-              <Row payment>
-                <FormGroup><label>Número do cartão</label><input type="text" /></FormGroup>
-                <FormGroup><label>CVV</label><input type="text" /></FormGroup>
-              </Row>
-              <Row>
-                <FormGroup><label>Mês de vencimento</label><input type="text" /></FormGroup>
-                <FormGroup><label>Ano de vencimento</label><input type="text" /></FormGroup>
-              </Row>
-              <ButtonContainer>
-                <BotaoPrincipal type="button" onClick={finalizarPedido}>
-                  Finalizar pagamento
-                </BotaoPrincipal>
-                <BotaoPrincipal type="button" onClick={() => setEtapa("endereco")}>
-                  Voltar para a edição de endereço
-                </BotaoPrincipal>
-              </ButtonContainer>
-            </form>
+            <h3>Pagamento - Valor a pagar {formatarValor(total)}</h3>
+            <FormGroup><label>Nome no cartão</label><input type="text" /></FormGroup>
+            <Row payment><FormGroup><label>Número do cartão</label><input type="text" /></FormGroup><FormGroup><label>CVV</label><input type="text" /></FormGroup></Row>
+            <Row><FormGroup><label>Mês de vencimento</label><input type="text" /></FormGroup><FormGroup><label>Ano de vencimento</label><input type="text" /></FormGroup></Row>
+            <BotaoPrincipal onClick={() => { setEtapa("confirmacao"); dispatch(clear()); }}>Finalizar pagamento</BotaoPrincipal>
+            <BotaoPrincipal onClick={() => setEtapa("endereco")}>Voltar para a entrega</BotaoPrincipal>
           </>
         )}
 
-        {/* ETAPA 4: CONFIRMAÇÃO */}
         {etapa === "confirmacao" && (
           <>
-            <h3>Pedido realizado - {"{ORDER_ID}"}</h3>
-            <p>
-              Estamos felizes em informar que seu pedido já está em processo de preparação e, em breve, será entregue no endereço fornecido.
-            </p>
-            <p>
-              Gostaríamos de ressaltar que nossos entregadores não estão autorizados a realizar cobranças extras.
-            </p>
-            <p>
-              Lembre-se da importância de higienizar as mãos após o recebimento do pedido, garantindo assim sua segurança e bem-estar durante a refeição.
-            </p>
-            <p>
-              Esperamos que desfrute de uma deliciosa e agradável experiência gastronômica. Bom apetite!
-            </p>
-            <ButtonContainer>
-              <BotaoPrincipal onClick={handleClose}>
-                Concluir
-              </BotaoPrincipal>
-            </ButtonContainer>
+            <h3>Pedido realizado - #12345</h3>
+            <p>Estamos felizes em informar que seu pedido já está em processo de preparação e, em breve, será entregue no endereço fornecido.</p>
+            <p>Gostaríamos de ressaltar que nossos entregadores não estão autorizados a realizar cobranças extras.</p>
+            <p>Lembre-se da importância de higienizar as mãos após o recebimento do pedido, garantindo assim sua segurança e bem-estar durante a refeição.</p>
+            <p>Esperamos que desfrute de uma deliciosa e agradável experiência gastronômica. Bom apetite!</p>
+            <BotaoPrincipal onClick={handleClose}>Concluir</BotaoPrincipal>
           </>
         )}
       </SidebarContainer>

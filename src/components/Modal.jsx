@@ -1,5 +1,7 @@
 import styled from "styled-components";
 import fechar from "../assets/close.png";
+import { useDispatch } from "react-redux";
+import { add } from "../store/cartSlice";
 
 const Overlay = styled.div`
   position: fixed;
@@ -23,8 +25,6 @@ const ModalBox = styled.div`
   @media (max-width: 768px) {
     flex-direction: column;
     padding: 16px;
-    max-height: 90vh;
-    overflow-y: auto;
   }
 `;
 
@@ -54,17 +54,8 @@ const Content = styled.div`
   display: flex;
   flex-direction: column;
 
-  h3 {
-    font-size: 18px;
-    font-weight: 900;
-    margin-bottom: 16px;
-  }
-
-  p {
-    font-size: 14px;
-    line-height: 22px;
-    margin-bottom: 24px;
-  }
+  h3 { font-size: 18px; font-weight: 900; margin-bottom: 16px; }
+  p { font-size: 14px; line-height: 22px; margin-bottom: 24px; }
 
   button {
     background-color: #FFEBD9;
@@ -78,22 +69,37 @@ const Content = styled.div`
   }
 `;
 
-export default function Modal({ produto, onClose, onAdd }) {
+export default function Modal({ produto, onClose }) {
+  const dispatch = useDispatch();
+
   if (!produto) return null;
+
+  const handleAddToCart = () => {
+    dispatch(add(produto));
+    onClose();
+  };
+
+  const formatarPreco = (valor) => {
+    if (typeof valor === 'number') {
+      return valor.toLocaleString('pt-br', { style: 'currency', currency: 'BRL' });
+    }
+    return valor;
+  };
 
   return (
     <Overlay onClick={onClose}>
       <ModalBox onClick={(e) => e.stopPropagation()}>
         <CloseIcon src={fechar} alt="Fechar" onClick={onClose} />
-        <Imagem src={produto.img} alt={produto.nome} />
+        <Imagem src={produto.foto} alt={produto.nome} />
         <Content>
           <h3>{produto.nome}</h3>
           <p>
-            A pizza Margherita é uma pizza clássica da culinária italiana, reconhecida por sua simplicidade e sabor inigualável. Ela é feita com uma base de massa fina e crocante, coberta com molho de tomate fresco, queijo mussarela de alta qualidade, manjericão fresco e azeite de oliva extra-virgem. A combinação de sabores é perfeita, com o molho de tomate suculento e ligeiramente ácido, o queijo derretido e cremoso e as folhas de manjericão frescas, que adicionam um toque de sabor herbáceo. É uma pizza simples, mas deliciosa, que agrada a todos os paladares e é uma ótima opção para qualquer ocasião.<br /><br />
-            Serve: de 2 a 3 pessoas
+            {produto.descricao}
+            <br /><br />
+            Serve: {produto.porcao}
           </p>
-          <button onClick={onAdd}>
-            Adicionar ao carrinho - {produto.preco}
+          <button onClick={handleAddToCart}>
+            Adicionar ao carrinho - {formatarPreco(produto.preco)}
           </button>
         </Content>
       </ModalBox>

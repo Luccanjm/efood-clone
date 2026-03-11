@@ -1,6 +1,6 @@
 import styled from "styled-components";
-import { useContext } from "react";
-import { CartContext } from "../context/CartContext";
+import { useSelector, useDispatch } from "react-redux";
+import { toggleCart } from "../store/cartSlice";
 import logo from "../assets/logo.png";
 import fundo from "../assets/fundo.png";
 
@@ -25,14 +25,15 @@ const Logo = styled.img`
 `;
 
 export default function HeaderPerfil() {
-  const { cart, setIsCartOpen } = useContext(CartContext);
+  const dispatch = useDispatch();
+  const items = useSelector((state) => state.cart.items);
 
   return (
     <HeaderBar>
       <a href="/">Restaurantes</a>
       <Logo src={logo} alt="efood" />
-      <span onClick={() => setIsCartOpen(true)}>
-        {cart.length} produto(s) no carrinho
+      <span onClick={() => dispatch(toggleCart())}>
+        {items.length} produto(s) no carrinho
       </span>
     </HeaderBar>
   );

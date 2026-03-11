@@ -1,13 +1,11 @@
-import { useState, useContext } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
-import { CartContext } from "../context/CartContext";
 import HeaderPerfil from '../components/HeaderPerfil';
 import ProdutoCardPerfil from "../components/ProdutoCardPerfil";
 import CarrinhoSidebar from "../components/CarrinhoSidebar";
 import Modal from "../components/Modal";
 import Footer from '../components/Footer';
-import PizzaImg from '../assets/pizza.png';
-import MacarraoImg from '../assets/macarrao.png';
 
 const Hero = styled.div`
   width: 100%;
@@ -44,36 +42,42 @@ const ListContainer = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 32px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    padding: 0 20px;
+  }
 `;
 
 export default function Perfil() {
+  const { id } = useParams(); // Pega o ID da URL
+  const [restaurante, setRestaurante] = useState(null);
   const [modalProduto, setModalProduto] = useState(null);
-  const { addToCart } = useContext(CartContext);
 
-  const produtoExemplo = {
-    id: 1,
-    nome: "Pizza Marguerita",
-    img: PizzaImg,
-    preco: "R$ 60,90",
-    descricao: "A clássica Marguerita: molho de tomate suculento, mussarela derretida, manjericão fresco e um toque de azeite."
-  };
+  useEffect(() => {
+    fetch(`https://api-ebac.vercel.app/api/efood/restaurantes/${id}`)
+      .then((res) => res.json())
+      .then((data) => setRestaurante(data));
+  }, [id]);
+
+  if (!restaurante) return null;
 
   return (
     <>
       <HeaderPerfil />
-      <Hero style={{ backgroundImage: `url(${MacarraoImg})` }}>
+      <Hero style={{ backgroundImage: `url(${restaurante.capa})` }}>
         <div className="container">
-          <p style={{ fontSize: '32px', fontWeight: '100' }}>Italiana</p>
-          <h2 style={{ fontSize: '32px', fontWeight: '900' }}>La Dolce Vita Trattoria</h2>
+          <p style={{ fontSize: '32px', fontWeight: '100' }}>{restaurante.tipo}</p>
+          <h2 style={{ fontSize: '32px', fontWeight: '900' }}>{restaurante.titulo}</h2>
         </div>
       </Hero>
       
       <ListContainer>
-        {[1, 2, 3, 4, 5, 6].map((i) => (
+        {restaurante.cardapio.map((item) => (
           <ProdutoCardPerfil 
-            key={i} 
-            img={PizzaImg} 
-            onMaisDetalhes={() => setModalProduto(produtoExemplo)} 
+            key={item.id} 
+            item={item}
+            onMaisDetalhes={() => setModalProduto(item)} 
           />
         ))}
       </ListContainer>
@@ -82,10 +86,6 @@ export default function Perfil() {
         <Modal 
           produto={modalProduto} 
           onClose={() => setModalProduto(null)} 
-          onAdd={() => {
-            addToCart(modalProduto);
-            setModalProduto(null);
-          }}
         />
       )}
 
