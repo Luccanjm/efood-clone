@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleCart } from "../store/cartSlice";
+import { Link } from "react-router-dom";
 import logo from "../assets/logo.png";
 import fundo from "../assets/fundo.png";
 
@@ -30,7 +31,7 @@ export default function HeaderPerfil() {
 
   return (
     <HeaderBar>
-      <a href="/">Restaurantes</a>
+      <Link to="/">Restaurantes</Link>
       <Logo src={logo} alt="efood" />
       <span onClick={() => dispatch(toggleCart())}>
         {items.length} produto(s) no carrinho
